@@ -16,11 +16,14 @@ os.execvpe('bash', ['bash'], env)
 
 
 """
-THOUGHTS ON THE API
+# Add a profile name rob from the file named rob.sh
 switchenv -n rob -f rob.sh
 
+# Switch to the rob profile (fuzzypick profile when you want)
 switchenv -e [rob]
 
-switchenv -d [rob]
+# View the contents of a profile (fuzzypypick when needed)
+switchenv -v [rob]
 """
+
 
