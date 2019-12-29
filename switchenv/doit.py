@@ -53,7 +53,6 @@ class SwitchEnv:
         bashrc = '\n'.join([f' {line}' for line in bashrc.split('\n') if line])
         with open(self.TEMP_RC_FILE, 'w') as temp_rc_file:
             temp_rc_file.write(bashrc)
-            
 
     @cached_property
     def blob(self):
@@ -76,7 +75,17 @@ class SwitchEnv:
         """
         Bust the cache for all cached properties
         """
-        for attr in ['blob', 'keys']:
+        # try:
+        #     del self.keys
+        # except AttributeError:
+        #     pass
+
+        # try:
+        #     del self.keys
+        # except AttributeError:
+        #     pass
+
+        for attr in ['keys', 'blob']:
             try:
                 delattr(self, attr)
             except AttributeError:
@@ -203,14 +212,21 @@ def show(profiles):
 
 
 @cli.command(help='Delete a profile')
-def delete():
-    click.echo('delete')
+@click.option('-p', '--profiles', multiple=True)
+def delete(profiles):
+    swenv = SwitchEnv()
+    initial_keys = set(swenv.keys)
+    swenv.delete(keys=profiles)
+    final_keys = set(swenv.keys)
+    deleted_keys = initial_keys - final_keys
+    if deleted_keys:
+        print(f'Deleted profiles: {sorted(deleted_keys)}')
 
 
 @cli.command(help='Create a profile from file')
 @click.option('-p', '--profile_name', required=True)
 @click.option('-f', '--file_name', required=True)
-def create(profile_name, file_name):
+def add(profile_name, file_name):
     if not os.path.isfile(file_name):
         print(f"\nThe file '{file_name}' does not exist\n")
         sys.exit(1)
@@ -222,11 +238,6 @@ def create(profile_name, file_name):
 
     swenv = SwitchEnv()
     swenv.update(blob)
-
-
-
-
-
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
