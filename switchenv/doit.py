@@ -8,6 +8,7 @@ import click
 import shutil
 from typing import Optional, List
 import fuzzypicker
+import textwrap
 
 
 class cached_property(object):
@@ -30,10 +31,29 @@ class SwitchEnv:
     BLOB_DIR = os.path.realpath(os.path.expanduser('~/.switchenv'))
     BLOB_FILE = os.path.join(BLOB_DIR, 'profiles.json')
     TEMP_FILE = os.path.join(BLOB_DIR, '__temp_profiles__.json')
+    BASH_RC_FILE = os.path.realpath(os.path.expanduser('~/.bashrc'))
+    TEMP_RC_FILE = os.path.join(BLOB_DIR, 'switchenvrc.sh')
 
     def __init__(self):
         # Ensure directory structure every time class is instantiate4d
         os.makedirs(self.BLOB_DIR, exist_ok=True)
+
+    def make_temp_rc_file(self, code):
+
+        code_lines = code.split('\n')
+        code_lines.append('PS1="»$PS1"')
+        code = '\n'.join(code_lines)
+
+        bashrc = ''
+        if os.path.isfile(self.BASH_RC_FILE):
+            with open(self.BASH_RC_FILE) as bashrc_file:
+                bashrc = bashrc_file.read()
+
+        bashrc = textwrap.dedent(f'{bashrc}\n{code}')
+        bashrc = '\n'.join([f' {line}' for line in bashrc.split('\n') if line])
+        with open(self.TEMP_RC_FILE, 'w') as temp_rc_file:
+            temp_rc_file.write(bashrc)
+            
 
     @cached_property
     def blob(self):
@@ -148,7 +168,17 @@ class SwitchEnv:
 
 
 def run_switch_env(profile: Optional[str] = None):
-    print('Switchimng to profile', profile)
+    swenv = SwitchEnv()
+    if profile is None:
+        profile = swenv.get_key()
+
+    code = swenv.blob[profile]
+    swenv.make_temp_rc_file(code)
+
+    env = os.environ
+    commands = ['bash', '--init-file', swenv.TEMP_RC_FILE]
+
+    os.execvpe('bash', commands, env)
 
 
 @click.group()
