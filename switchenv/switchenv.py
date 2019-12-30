@@ -44,6 +44,11 @@ class SwitchEnv:
         pre_code_lines = []
         post_code_lines = [f'PS1="•{profile}•$PS1"']
 
+        env_lines = []
+        for key, val in self.env.items():
+            env_lines.append(f'export {key}="{val}"')
+        env_code = '\n'.join(env_lines)
+
         code_lines = pre_code_lines + input_code_lines + post_code_lines
         code = '\n'.join(code_lines)
 
@@ -52,7 +57,13 @@ class SwitchEnv:
             with open(self.BASH_RC_FILE) as bashrc_file:
                 bashrc = bashrc_file.read()
 
-        bashrc = textwrap.dedent(f'{bashrc}\n{code}')
+        # The order here is important.  The users .bashrc can reset
+        # the path variable overriding any currently set envs vars.
+        # So:
+        #    1) Run their .bashrc
+        #    2) export all current environment variables
+        #    3) source the custom profile code
+        bashrc = textwrap.dedent(f'{bashrc}\n{env_code}\n{code}')
         bashrc = '\n'.join([f' {line}' for line in bashrc.split('\n') if line])
         with open(self.TEMP_RC_FILE, 'w') as temp_rc_file:
             temp_rc_file.write(bashrc)
@@ -185,6 +196,7 @@ class SwitchEnv:
         # OSX does a weird thing by setting this variable
         # It ends up screwing up execvpe, so zap it out of
         # the environment
+        # See: https://stackoverflow.com/questions/26323852/whats-the-meaning-of-pyvenv-launcher-environment-variable
         env.pop('__PYVENV_LAUNCHER__', None)
         env.pop('_', None)
         return env

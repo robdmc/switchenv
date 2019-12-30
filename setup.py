@@ -18,6 +18,8 @@ def get_version():
 
 
 install_requires = [
+    'click',
+    'fuzzypicker'
 ]
 
 tests_require = [
@@ -48,9 +50,9 @@ setup(
     keywords='',
     packages=find_packages(),
     classifiers=[
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
@@ -62,4 +64,9 @@ setup(
     tests_require=tests_require,
     extras_require=extras_require,
     zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'switchenv = switchenv.switchenv:main',
+        ],
+    }
 )
