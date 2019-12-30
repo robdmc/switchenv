@@ -38,10 +38,13 @@ class SwitchEnv:
         # Ensure directory structure every time class is instantiate4d
         os.makedirs(self.BLOB_DIR, exist_ok=True)
 
-    def make_temp_rc_file(self, code):
+    def make_temp_rc_file(self, profile, code):
 
-        code_lines = code.split('\n')
-        code_lines.append('PS1="»$PS1"')
+        input_code_lines = code.split('\n')
+        pre_code_lines = []
+        post_code_lines = [f'PS1="•{profile}•$PS1"']
+
+        code_lines = pre_code_lines + input_code_lines + post_code_lines
         code = '\n'.join(code_lines)
 
         bashrc = ''
@@ -175,6 +178,17 @@ class SwitchEnv:
         print('=' * 40)
         print(self.blob[key])
 
+    @property
+    def env(self):
+        env = dict(os.environ)
+
+        # OSX does a weird thing by setting this variable
+        # It ends up screwing up execvpe, so zap it out of
+        # the environment
+        env.pop('__PYVENV_LAUNCHER__', None)
+        env.pop('_', None)
+        return env
+
 
 def run_switch_env(profile: Optional[str] = None):
     swenv = SwitchEnv()
@@ -182,12 +196,11 @@ def run_switch_env(profile: Optional[str] = None):
         profile = swenv.get_key()
 
     code = swenv.blob[profile]
-    swenv.make_temp_rc_file(code)
+    swenv.make_temp_rc_file(profile, code)
 
-    env = os.environ
     commands = ['bash', '--init-file', swenv.TEMP_RC_FILE]
 
-    os.execvpe('bash', commands, env)
+    os.execvpe('bash', commands, swenv.env)
 
 
 @click.group()
@@ -208,6 +221,9 @@ def list():
 @click.option('-p', '--profiles', multiple=True)
 def show(profiles):
     swenv = SwitchEnv()
+    if not profiles:
+        profiles = [swenv.get_key()]
+    swenv = SwitchEnv()
     swenv.show(key_list=profiles)
 
 
@@ -215,6 +231,14 @@ def show(profiles):
 @click.option('-p', '--profiles', multiple=True)
 def delete(profiles):
     swenv = SwitchEnv()
+    if not profiles:
+        profiles = [swenv.get_key()]
+
+    confirm = input(f"\nDelete {profiles}\ny/n: ").lower()
+    if confirm[0] != 'y':
+        print('Nothing done')
+        return
+
     initial_keys = set(swenv.keys)
     swenv.delete(keys=profiles)
     final_keys = set(swenv.keys)
@@ -239,8 +263,26 @@ def add(profile_name, file_name):
     swenv = SwitchEnv()
     swenv.update(blob)
 
-if __name__ == '__main__':
+
+@cli.command(help='Snapshot current env into a profile')
+@click.option('-p', '--profile_name', required=True)
+def snapshot(profile_name):
+    swenv = SwitchEnv()
+
+    code_lines = []
+    for key, val in swenv.env.items():
+        code_lines.append(f'export {key}={val}')
+
+    code = '\n'.join(code_lines)
+    swenv.update({profile_name: code})
+
+
+def main():
     if len(sys.argv) > 1:
         cli()
     else:
         run_switch_env()
+
+
+if __name__ == '__main__':
+    main()
