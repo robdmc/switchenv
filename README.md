@@ -1,4 +1,4 @@
-# switchenv: An environment manger for bash
+# `switchenv`: An environment manger for bash
 In my analysis work, I will frequently put authentification credentials into environment variables.  This allows me to check my analysis code into github without divulging any secrets.  So, for example, I might have code in a Jupyter notebook that looks something like
 ```python
 import os
