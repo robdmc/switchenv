@@ -93,7 +93,9 @@ directory.
 This json file serves as the centralized data-store for all of your profile information.
 
 # Navigating Between Environments with `switchenv`
-Using `switchenv1` involves interacting with a simple console-based UI, so it is best illustrated using a gif.
+Using `switchenv` involves interacting with a simple console-based UI, so it is best illustrated using a gif.
+Shown here is my admittedly sub-par screen recording of how to use switchenv.
+![Demo Gif](https://github.com/robdmc/switchenv/blob/master/images/switchenv_demo.gif)
 
 
 # Ignore below
