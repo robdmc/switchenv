@@ -6,7 +6,7 @@ import sys
 import json
 import click
 import shutil
-from typing import Optional, List
+from typing import Optional
 import fuzzypicker
 import textwrap
 
@@ -41,17 +41,23 @@ class SwitchEnv:
     def make_temp_rc_file(self, profile, code):
 
         input_code_lines = code.split('\n')
-        pre_code_lines = []
-        post_code_lines = [f'PS1="•{profile}•$PS1"']
+        # Save off the PS1 variable before anything can change it
+        pre_code_lines = ['export __PSSWE__="$PS1"']
 
+        # Add the profile name to the front of PS1
+        post_code_lines = [f'PS1="•{profile}•$__PSSWE__"']
+
+        # Create lines that will store the current env
         env_lines = []
         for key, val in self.env.items():
             env_lines.append(f'export {key}="{val}"')
         env_code = '\n'.join(env_lines)
 
+        # Build code from the stored profile
         code_lines = pre_code_lines + input_code_lines + post_code_lines
         code = '\n'.join(code_lines)
 
+        # Load in the user's bashrc file
         bashrc = ''
         if os.path.isfile(self.BASH_RC_FILE):
             with open(self.BASH_RC_FILE) as bashrc_file:
@@ -89,16 +95,6 @@ class SwitchEnv:
         """
         Bust the cache for all cached properties
         """
-        # try:
-        #     del self.keys
-        # except AttributeError:
-        #     pass
-
-        # try:
-        #     del self.keys
-        # except AttributeError:
-        #     pass
-
         for attr in ['keys', 'blob']:
             try:
                 delattr(self, attr)
@@ -167,7 +163,7 @@ class SwitchEnv:
 
     def show(self, key_list=None, template=None):
         """
-        Show a single profile.  template is a .format() 
+        Show a single profile.  template is a .format()
         template that will have access to the profile
         name using the 'key' variable.  Defaults to
         f'
@@ -184,9 +180,9 @@ class SwitchEnv:
             return
 
         print('\n')
-        print('=' * 40)
-        print(key)
-        print('=' * 40)
+        print(f"#{'=' * 40}")
+        print(f'# {key}')
+        print(f"#{'=' * 40}")
         print(self.blob[key])
 
     @property
@@ -202,8 +198,16 @@ class SwitchEnv:
         return env
 
 
+def ensure_profiles_exist(swenv):
+    if len(swenv.keys) == 0:
+        print('\nNo saved profiles\n')
+        sys.exit(1)
+
+
 def run_switch_env(profile: Optional[str] = None):
     swenv = SwitchEnv()
+    ensure_profiles_exist(swenv)
+
     if profile is None:
         profile = swenv.get_key()
 
@@ -220,11 +224,38 @@ def cli():
     pass
 
 
+@cli.command(help='Show usage examples')
+def examples():
+    text = textwrap.dedent("""
+
+    # Snapshot the current environment as a profile
+    switchenv snapshot -p my_snapshot_profile_name
+
+    # Add an existing shell script as a profile
+    switchenv add -p my_profile_name -f path/to/my_scrpt.sh
+
+    # Show all profile names
+    switchenv list
+
+    # Show contents of a specific profile
+    switchenv show                                # allows for fuzzysearch of profile name
+    switchenv show -p profile1 [-p profile2... ]  # show a specific profile(s)
+
+    # Drop into a subshell with a specific profile
+    switchenv  # Will present you with a fuzzy searchable list of profiles
+
+    # Delete profiles
+    switchenv delete -p profile_name_1 [-p profile_name_2, ...]
+
+
+    """)
+    print(text)
+
+
 @cli.command(help='List all profile names')
 def list():
     swenv = SwitchEnv()
-    if not swenv.keys:
-        print('No saved profies')
+    ensure_profiles_exist(swenv)
     for key in swenv.keys:
         print(key)
 
@@ -233,6 +264,7 @@ def list():
 @click.option('-p', '--profiles', multiple=True)
 def show(profiles):
     swenv = SwitchEnv()
+    ensure_profiles_exist(swenv)
     if not profiles:
         profiles = [swenv.get_key()]
     swenv = SwitchEnv()
@@ -243,6 +275,7 @@ def show(profiles):
 @click.option('-p', '--profiles', multiple=True)
 def delete(profiles):
     swenv = SwitchEnv()
+    ensure_profiles_exist(swenv)
     if not profiles:
         profiles = [swenv.get_key()]
 
@@ -283,7 +316,7 @@ def snapshot(profile_name):
 
     code_lines = []
     for key, val in swenv.env.items():
-        code_lines.append(f'export {key}={val}')
+        code_lines.append(f'export {key}="{val}"')
 
     code = '\n'.join(code_lines)
     swenv.update({profile_name: code})
