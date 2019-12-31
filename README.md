@@ -92,6 +92,12 @@ directory.
 ```
 This json file serves as the centralized data-store for all of your profile information.
 
+# Navigating Between Environments with `switchenv`
+Using `switchenv1` involves interacting with a simple console-based UI, so it is best illustrated using a gif.
+
+
+# Ignore below
+
 
 
 
