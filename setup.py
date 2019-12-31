@@ -44,6 +44,7 @@ setup(
     version=get_version(),
     description='Manager for bash environments',
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     url='https://github.com/robdmc/switchenv',
     author='Rob deCarvalho',
     author_email='unlisted@unlisted.net',
