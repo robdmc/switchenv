@@ -1,5 +1,5 @@
 # `switchenv`: An environment manger for bash
-In my analysis work, I will frequently put authentification credentials into environment variables.  This allows me to check my analysis code into github without divulging any secrets.  So, for example, I might have code in a Jupyter notebook that looks something like
+In my analysis work, I will frequently put authentification credentials into environment variables.  This allows me to check my code into github without divulging any secrets.  So, for example, I might have code in a Jupyter notebook that looks something like
 ```python
 import os
 from my_module import get_database_connection
@@ -18,7 +18,7 @@ The database I connect to will be completely determined by the environment varia
 
 # Use Case
 Imagine I have the following bash files I can source in order to set up my bash
-environment the way I'd like.  Typically I would just run `source rc_development_db.sh` before running my code in order to set up my dev environmnt.  The problem with that is that I have to be very careful about where I place my rc files so I don't accidentally check them into github.  Furthermore, it can be annoying to keep track of these files when I'd like to reuse them for different projects.  This is where `switchenv` comes in.
+environment the way I'd like.  Typically I would just run `source rc_development_db.sh` before running my code in order to set up my dev environmnt.  I have to be very careful about where I place my rc files so that I don't accidentally check them into github.  Furthermore, it can be annoying to keep track of these files when I'd like to reuse them for different projects.  This is where `switchenv` comes in.
 
 `rc_development_db.sh`
 ```bash
