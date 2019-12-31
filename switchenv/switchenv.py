@@ -89,7 +89,10 @@ class SwitchEnv:
         return sorted(self.blob.keys())
 
     def get_key(self):
-        return fuzzypicker.picker(self.keys)
+        key = fuzzypicker.picker(self.keys)
+        if key is None:
+            sys.exit(0)
+        return key
 
     def _reset(self):
         """
