@@ -119,6 +119,8 @@ recording of how to use switchenv.
 Just for my future reference, I made this recording by using the native OSX
 screen recording feature to make a `.mov` file.  I then used
 [Gif Brewary 3](https://apps.apple.com/us/app/gif-brewery-3-by-gfycat/id1081413713?mt=12)
-![Demo Gif](https://github.com/robdmc/switchenv/blob/master/images/switchenv_demo.gif)
 to convert it to a `.gif` file by manually setting the speed to 150%  and
 frames-per-sec to 6.  I let the software figure it out from there.
+
+
+![Demo Gif](https://github.com/robdmc/switchenv/blob/master/images/switchenv_demo.gif)
