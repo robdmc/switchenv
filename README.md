@@ -1,5 +1,5 @@
 # `switchenv`: An environment manger for bash
-In my analysis work, I will frequently put authentification credentials into environment variables.  This allows me to check my code into github without divulging any secrets.  So, for example, I might have code in a Jupyter notebook that looks something like
+In my analysis work, I will frequently put auth credentials into environment variables.  This allows me to check my code into github without divulging any secrets.  So, for example, I might have code in a Jupyter notebook that looks something like
 ```python
 import os
 from my_module import get_database_connection
@@ -63,13 +63,13 @@ bash> switchenv add -p dev -f ./rc_development_db.sh
 bash> switchenv add -p prod -f ./rc_production_db.sh
 bash>
 bash> # Profiles can hold any legal bash code, including function definitions.
-bash> switchenv add -p functions -f ./rc_bash_functions.sh
+bash> switchenv add -p func -f ./rc_bash_functions.sh
 bash>
 bash> # Show list of stored profile names
 bash> switchenv list
 dev
 prod
-salesforce
+func
 bash>
 bash> # Show contents of single profile
 bash> switchenv show -p prod
@@ -85,12 +85,12 @@ export PGDATABASE=my_prod_database
 export PGHOST=my_prod_host
 ```
 
-Under the hood, switchenv placed a json file in a hidden directory off of your home
+Under the hood, switchenv placed a json file in a hidden directory off of my home
 directory.
 ```bash
 ~/.switchenv/profiles.json
 ```
-This json file serves as the centralized data-store for all of your profile information.
+This json file serves as the centralized data-store for all of my profile information.
 
 # Navigating Between Environments with `switchenv`
 Using `switchenv` involves interacting with a simple console-based UI, so it is best illustrated using a gif.
