@@ -42,7 +42,7 @@ extras_require = {
 setup(
     name='switchenv',
     version=get_version(),
-    description='',
+    description='Manager for bash environments',
     long_description=open('README.md').read(),
     url='https://github.com/robdmc/switchenv',
     author='Rob deCarvalho',
