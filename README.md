@@ -116,6 +116,11 @@ Using `switchenv` involves interacting with a simple console-based UI, so it is
 best illustrated using a gif.  Shown here is my admittedly sub-par screen
 recording of how to use switchenv.
 
+For a more thorough description use
+```bash
+switchenv --help
+```
+
 Just for my future reference, I made this recording by using the native OSX
 screen recording feature to make a `.mov` file.  I then used
 [Gif Brewary 3](https://apps.apple.com/us/app/gif-brewery-3-by-gfycat/id1081413713?mt=12)
