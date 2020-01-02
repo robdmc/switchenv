@@ -57,7 +57,8 @@ class SwitchEnv:
         env_code = '\n'.join(env_lines)
 
         # Build code from the stored profile
-        code_lines = pre_code_lines + input_code_lines + post_code_lines
+        pre_code = '\n'.join(pre_code_lines)
+        code_lines = input_code_lines + post_code_lines
         code = '\n'.join(code_lines)
 
         # Load in the user's bashrc file
@@ -72,7 +73,7 @@ class SwitchEnv:
         #    1) Run their .bashrc
         #    2) export all current environment variables
         #    3) source the custom profile code
-        bashrc = textwrap.dedent(f'{bashrc}\n{env_code}\n{code}')
+        bashrc = textwrap.dedent(f'{pre_code}\n{bashrc}\n{env_code}\n{code}')
         bashrc = '\n'.join([f' {line}' for line in bashrc.split('\n') if line])
         with open(self.TEMP_RC_FILE, 'w') as temp_rc_file:
             temp_rc_file.write(bashrc)
@@ -163,6 +164,7 @@ class SwitchEnv:
             sys.exit(1)
 
         if entry['code_type'] == 'raw':
+            code_list.append(f'# ------- switchenv starting code for profile: {profile_name}\n')
             code_list.append(entry['code'])
 
         elif entry['code_type'] == 'composed':
@@ -295,6 +297,9 @@ class SwitchEnv:
         # See: https://stackoverflow.com/questions/26323852/whats-the-meaning-of-pyvenv-launcher-environment-variable
         env.pop('__PYVENV_LAUNCHER__', None)
         env.pop('_', None)
+
+        # Don't want this screwing up prompt definitions
+        env.pop('__PSSWE__', None)
         return env
 
 
