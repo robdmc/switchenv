@@ -437,7 +437,7 @@ def snapshot(profile_name):
         code_lines.append(f'export {key}="{val}"')
 
     code = '\n'.join(code_lines)
-    swenv.update({profile_name: code})
+    swenv.update_raw(profile_name, code)
 
 
 def main():
