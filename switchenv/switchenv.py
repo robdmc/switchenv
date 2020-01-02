@@ -45,10 +45,15 @@ class SwitchEnv:
 
         input_code_lines = code.split('\n')
         # Save off the PS1 variable before anything can change it
-        pre_code_lines = ['export __PSSWE__="$PS1"']
+        pre_code_lines = []
+        if '__PSSWE__' not in self.env:
+            pre_code_lines.append('export __PSSWE__="$PS1"')
 
         # Add the profile name to the front of PS1
-        post_code_lines = [f'PS1="•{profile}•$__PSSWE__"']
+        post_code_lines = [
+            f'export __PSSWE__="•{profile}•$__PSSWE__"',
+            f'PS1="$__PSSWE__"'
+        ]
 
         # Create lines that will store the current env
         env_lines = []
@@ -58,7 +63,8 @@ class SwitchEnv:
 
         # Build code from the stored profile
         pre_code = '\n'.join(pre_code_lines)
-        code_lines = input_code_lines + post_code_lines
+        post_code = '\n'.join(post_code_lines)
+        code_lines = input_code_lines
         code = '\n'.join(code_lines)
 
         # Load in the user's bashrc file
@@ -73,7 +79,7 @@ class SwitchEnv:
         #    1) Run their .bashrc
         #    2) export all current environment variables
         #    3) source the custom profile code
-        bashrc = textwrap.dedent(f'{pre_code}\n{bashrc}\n{env_code}\n{code}')
+        bashrc = textwrap.dedent(f'\n{bashrc}\n{pre_code}\n{env_code}\n{code}\n{post_code}')
         bashrc = '\n'.join([f' {line}' for line in bashrc.split('\n') if line])
         with open(self.TEMP_RC_FILE, 'w') as temp_rc_file:
             temp_rc_file.write(bashrc)
@@ -298,8 +304,6 @@ class SwitchEnv:
         env.pop('__PYVENV_LAUNCHER__', None)
         env.pop('_', None)
 
-        # Don't want this screwing up prompt definitions
-        env.pop('__PSSWE__', None)
         return env
 
 
