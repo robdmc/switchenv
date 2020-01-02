@@ -47,12 +47,12 @@ class SwitchEnv:
         # Save off the PS1 variable before anything can change it
         pre_code_lines = []
         if '__PSSWE__' not in self.env:
-            pre_code_lines.append('export __PSSWE__="$PS1"')
+            pre_code_lines.append(' export __PSSWE__="$PS1"')
 
         # Add the profile name to the front of PS1
         post_code_lines = [
-            f'export __PSSWE__="•{profile}•$__PSSWE__"',
-            f'PS1="$__PSSWE__"'
+            f' export __PSSWE__="•{profile}•$__PSSWE__"',
+            f' PS1="$__PSSWE__"'
         ]
 
         # Create lines that will store the current env
