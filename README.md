@@ -143,6 +143,10 @@ For a more thorough description use
 ```bash
 switchenv --help
 ```
+Or use the `switchenv` alias (because I hate typing) 
+```bash
+sw --help
+```
 
 Just for my future reference, I made this recording by using the native OSX
 screen recording feature to make a `.mov` file.  I then used
