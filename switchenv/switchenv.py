@@ -397,7 +397,7 @@ def show(profiles):
     swenv = SwitchEnv()
     swenv.show(key_list=profiles)
 
-@cli.command(help='Drop into subshell with named profile')
+@cli.command(help='Drop into subshell with named profile (useful in scripts)')
 @click.option('-p', '--profile', required=True)
 def source(profile):
     run_switch_env(profile)

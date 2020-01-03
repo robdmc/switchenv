@@ -160,7 +160,7 @@ Commands:
   list      List all profile names
   show      Show contents of a single profile
   snapshot  Snapshot current env into a profile
-  source    Drop into subshell with named profile
+  source    Drop into subshell with named profile (useful in scripts)
 ```
 
 Just for my future reference, I made this recording by using the native OSX
