@@ -69,6 +69,7 @@ setup(
     entry_points={
         'console_scripts': [
             'switchenv = switchenv.switchenv:main',
+            'sw = switchenv.switchenv:main',
         ],
     }
 )
