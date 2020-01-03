@@ -145,7 +145,21 @@ switchenv --help
 ```
 Or use the `switchenv` alias (because I hate typing) 
 ```bash
-sw --help
+bash> sw --help
+
+Usage: sw [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  add       Create a profile from file
+  compose   Compose a new profile from existing profiles
+  delete    Delete a profile
+  examples  Show usage examples
+  list      List all profile names
+  show      Show contents of a single profile
+  snapshot  Snapshot current env into a profile
 ```
 
 Just for my future reference, I made this recording by using the native OSX
