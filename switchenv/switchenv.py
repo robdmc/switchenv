@@ -258,14 +258,6 @@ class SwitchEnv:
         # Save the blob
         self.save(blob)
 
-    # def update(self, update_blob):
-    #     """
-    #     Add or update blob contents
-    #     """
-    #     blob = self.blob
-    #     blob.update(update_blob)
-    #     self.save(blob)
-
     def delete(self, keys):
         """
         Remove profiles from the blob
