@@ -110,6 +110,13 @@ class SwitchEnv:
         """
         return sorted(self.blob.get('profiles', {}).keys())
 
+    @cached_property
+    def items(self):
+        """
+        Returns list of profile names
+        """
+        return sorted(self.blob.get('profiles', {}).items())
+
     def get_key(self):
         key = fuzzypicker.picker(self.keys)
         if key is None:
@@ -200,7 +207,7 @@ class SwitchEnv:
         if self._confirm_file_contents(blob, self.TEMP_FILE):
             shutil.move(self.TEMP_FILE, self.BLOB_FILE)
         else:
-            warnings.warn('Warning.  File contents could not be verified.  Something went wrong with saving.') 
+            warnings.warn('Warning.  File contents could not be verified.  Something went wrong with saving.')
 
     def update_composed(self, composed_profile_name, source_profile_names):
         blob = self.blob
@@ -365,8 +372,14 @@ def examples():
 def list_profiles():
     swenv = SwitchEnv()
     ensure_profiles_exist(swenv)
-    for key in swenv.keys:
-        print(key)
+    for key, profile in swenv.items:
+        code_type = profile['code_type']
+        if code_type == 'raw':
+            print(key)
+        elif code_type == 'composed':
+            print(f'{key} -> {sorted(profile["code"])}')
+        else:
+            raise ValueError('unkown code_type')
 
 
 @cli.command(help='Show contents of a single profile')
