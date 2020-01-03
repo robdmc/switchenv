@@ -339,7 +339,6 @@ def run_switch_env(profile: Optional[str] = None):
 def cli():
     pass
 
-
 @cli.command(help='Show usage examples')
 def examples():
     text = textwrap.dedent("""
@@ -350,6 +349,9 @@ def examples():
     # Add an existing shell script as a profile
     switchenv add -p my_profile_name -f path/to/my_scrpt.sh
 
+    # Create a composite profile
+    switchenv compose -c my_composite_profile_name -p my_snapshot_profile_name -p my_profile_name
+
     # Show all profile names
     switchenv list
 
@@ -359,6 +361,9 @@ def examples():
 
     # Drop into a subshell with a specific profile
     switchenv  # Will present you with a fuzzy searchable list of profiles
+
+    # Drop intoa names subshell
+    switchenv source -p profile_name
 
     # Delete profiles
     switchenv delete -p profile_name_1 [-p profile_name_2, ...]
@@ -391,6 +396,12 @@ def show(profiles):
         profiles = [swenv.get_key()]
     swenv = SwitchEnv()
     swenv.show(key_list=profiles)
+
+@cli.command(help='Drop into subshell with named profile')
+@click.option('-p', '--profile', required=True)
+def source(profile):
+    run_switch_env(profile)
+
 
 
 @cli.command(help='Delete a profile')

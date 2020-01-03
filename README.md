@@ -140,11 +140,11 @@ best illustrated using a gif.  Shown here is my admittedly sub-par screen
 recording of how to use switchenv.
 
 For a more thorough description use
-```bash
+```
 switchenv --help
 ```
 Or use the `switchenv` alias (because I hate typing) 
-```bash
+```
 bash> sw --help
 
 Usage: sw [OPTIONS] COMMAND [ARGS]...
@@ -160,6 +160,7 @@ Commands:
   list      List all profile names
   show      Show contents of a single profile
   snapshot  Snapshot current env into a profile
+  source    Drop into subshell with named profile
 ```
 
 Just for my future reference, I made this recording by using the native OSX
