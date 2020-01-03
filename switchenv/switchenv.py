@@ -362,7 +362,7 @@ def examples():
     # Drop into a subshell with a specific profile
     switchenv  # Will present you with a fuzzy searchable list of profiles
 
-    # Drop intoa names subshell
+    # Drop into a named profile (useful for invoking in scripts)
     switchenv source -p profile_name
 
     # Delete profiles
