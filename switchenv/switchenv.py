@@ -290,7 +290,6 @@ class SwitchEnv:
         print(f'# {key}')
         print(f"#{'=' * 40}")
         print(self.get_code(key))
-        # print(self.blob['profiles'][key])
 
     @property
     def env(self):
