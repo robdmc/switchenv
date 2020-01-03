@@ -9,6 +9,7 @@ import shutil
 from typing import Optional
 import fuzzypicker
 import textwrap
+import warnings
 
 
 class cached_property(object):
@@ -34,6 +35,8 @@ class SwitchEnv:
     BASH_RC_FILE = os.path.realpath(os.path.expanduser('~/.bashrc'))
     TEMP_RC_FILE = os.path.join(BLOB_DIR, 'switchenvrc.sh')
 
+    BLOB_VERSION = '1.0'
+
     def __init__(self):
         # Ensure directory structure every time class is instantiate4d
         os.makedirs(self.BLOB_DIR, exist_ok=True)
@@ -42,10 +45,15 @@ class SwitchEnv:
 
         input_code_lines = code.split('\n')
         # Save off the PS1 variable before anything can change it
-        pre_code_lines = ['export __PSSWE__="$PS1"']
+        pre_code_lines = []
+        if '__PSSWE__' not in self.env:
+            pre_code_lines.append(' export __PSSWE__="$PS1"')
 
         # Add the profile name to the front of PS1
-        post_code_lines = [f'PS1="•{profile}•$__PSSWE__"']
+        post_code_lines = [
+            f' export __PSSWE__="•{profile}•$__PSSWE__"',
+            f' PS1="$__PSSWE__"'
+        ]
 
         # Create lines that will store the current env
         env_lines = []
@@ -54,7 +62,9 @@ class SwitchEnv:
         env_code = '\n'.join(env_lines)
 
         # Build code from the stored profile
-        code_lines = pre_code_lines + input_code_lines + post_code_lines
+        pre_code = '\n'.join(pre_code_lines)
+        post_code = '\n'.join(post_code_lines)
+        code_lines = input_code_lines
         code = '\n'.join(code_lines)
 
         # Load in the user's bashrc file
@@ -69,7 +79,7 @@ class SwitchEnv:
         #    1) Run their .bashrc
         #    2) export all current environment variables
         #    3) source the custom profile code
-        bashrc = textwrap.dedent(f'{bashrc}\n{env_code}\n{code}')
+        bashrc = textwrap.dedent(f'\n{bashrc}\n{pre_code}\n{env_code}\n{code}\n{post_code}')
         bashrc = '\n'.join([f' {line}' for line in bashrc.split('\n') if line])
         with open(self.TEMP_RC_FILE, 'w') as temp_rc_file:
             temp_rc_file.write(bashrc)
@@ -79,14 +89,33 @@ class SwitchEnv:
         """
         Returns the currently saved blob.  Empty dict if nothing saved.
         """
-        return self._load_file(self.BLOB_FILE)
+        blob = self._load_file(self.BLOB_FILE)
+        version = blob.get('version', 'unversioned')
+        if version != 'unversioned':
+            return blob
+
+        else:
+            profiles = {}
+            for profile_name, code in blob.items():
+                entry = {'code': code, 'code_type': 'raw'}
+                profiles[profile_name] = entry
+
+            new_blob = {'version': self.BLOB_VERSION, 'profiles': profiles}
+            return new_blob
 
     @cached_property
     def keys(self):
         """
         Returns list of profile names
         """
-        return sorted(self.blob.keys())
+        return sorted(self.blob.get('profiles', {}).keys())
+
+    @cached_property
+    def items(self):
+        """
+        Returns list of profile names
+        """
+        return sorted(self.blob.get('profiles', {}).items())
 
     def get_key(self):
         key = fuzzypicker.picker(self.keys)
@@ -122,7 +151,7 @@ class SwitchEnv:
         Saves a json blob to specified file_name
         """
         with open(file_name, 'w') as out_file:
-            json.dump(blob, out_file)
+            json.dump(blob, out_file, indent=2)
 
     def _confirm_file_contents(self, blob, file_name):
         """
@@ -132,12 +161,43 @@ class SwitchEnv:
         saved_blob = self._load_file(file_name)
         return blob == saved_blob
 
+    def get_code(self, profile_name):
+        code_list = self._get_code_list(profile_name)
+        return '\n'.join(code_list)
+
+    def _get_code_list(self, profile_name, code_list=None):
+        if code_list is None:
+            code_list = []
+
+        profiles = self.blob['profiles']
+
+        entry = profiles.get(profile_name)
+        if entry is None:
+            print(f"No profile named '{profile_name}'")
+            sys.exit(1)
+
+        if entry['code_type'] == 'raw':
+            code_list.append(f'# ------- switchenv starting code for profile: {profile_name}\n')
+            code_list.append(entry['code'])
+
+        elif entry['code_type'] == 'composed':
+            for sub_profile_name in entry['code']:
+                code_list = self._get_code_list(sub_profile_name, code_list=code_list)
+
+        else:
+            raise ValueError('Only code types allowed are raw and composed')
+
+        return code_list
+
     def save(self, blob):
         """
         Atomically save a blob to the canonical file_name
         """
         # Bust the cached property caches
         self._reset()
+
+        # Make sure the blob has the proper version
+        blob['version'] = self.BLOB_VERSION
 
         # Save the blob to a temp file
         self._save_file(blob, self.TEMP_FILE)
@@ -146,13 +206,56 @@ class SwitchEnv:
         # file with temp file
         if self._confirm_file_contents(blob, self.TEMP_FILE):
             shutil.move(self.TEMP_FILE, self.BLOB_FILE)
+        else:
+            warnings.warn('Warning.  File contents could not be verified.  Something went wrong with saving.')
 
-    def update(self, update_blob):
+    def update_composed(self, composed_profile_name, source_profile_names):
+        blob = self.blob
+        profiles = blob['profiles']
+        entry = profiles.get(composed_profile_name, {'code_type': 'composed'})
+
+        # Can only update same kind of code_type
+        if entry['code_type'] != 'composed':
+            raise RuntimeError('Trying to update a profile with wrong code type')
+
+        entry['code'] = list(source_profile_names)
+
+        # Save the entry to profiles
+        profiles[composed_profile_name] = entry
+
+        # Save profiles to blob
+        blob['profiles'] = profiles
+
+        # Save the blob
+        self.save(blob)
+
+    def update_raw(self, profile_name, code):
         """
         Add or update blob contents
         """
+        # Get a reference to the blob
         blob = self.blob
-        blob.update(update_blob)
+
+        # All profile information held in the 'profiles' blob key
+        profiles = blob.get('profiles', {})
+
+        # Get the current entry or dict initialized with default code type
+        entry = profiles.get(profile_name, {'code_type': 'raw'})
+
+        # Can only update same kind of code_type
+        if entry['code_type'] != 'raw':
+            raise RuntimeError('Trying to update a profile with wrong code type')
+
+        # Update the entry's code
+        entry['code'] = code
+
+        # Save the entry to profiles
+        profiles[profile_name] = entry
+
+        # Save profiles to blob
+        blob['profiles'] = profiles
+
+        # Save the blob
         self.save(blob)
 
     def delete(self, keys):
@@ -161,7 +264,7 @@ class SwitchEnv:
         """
         blob = self.blob
         for key in keys:
-            blob.pop(key, None)
+            blob['profiles'].pop(key, None)
         self.save(blob)
 
     def show(self, key_list=None, template=None):
@@ -186,7 +289,7 @@ class SwitchEnv:
         print(f"#{'=' * 40}")
         print(f'# {key}')
         print(f"#{'=' * 40}")
-        print(self.blob[key])
+        print(self.get_code(key))
 
     @property
     def env(self):
@@ -198,6 +301,7 @@ class SwitchEnv:
         # See: https://stackoverflow.com/questions/26323852/whats-the-meaning-of-pyvenv-launcher-environment-variable
         env.pop('__PYVENV_LAUNCHER__', None)
         env.pop('_', None)
+
         return env
 
 
@@ -214,7 +318,7 @@ def run_switch_env(profile: Optional[str] = None):
     if profile is None:
         profile = swenv.get_key()
 
-    code = swenv.blob[profile]
+    code = swenv.get_code(profile)
     swenv.make_temp_rc_file(profile, code)
 
     commands = ['bash', '--init-file', swenv.TEMP_RC_FILE]
@@ -226,7 +330,6 @@ def run_switch_env(profile: Optional[str] = None):
 def cli():
     pass
 
-
 @cli.command(help='Show usage examples')
 def examples():
     text = textwrap.dedent("""
@@ -236,6 +339,9 @@ def examples():
 
     # Add an existing shell script as a profile
     switchenv add -p my_profile_name -f path/to/my_scrpt.sh
+
+    # Create a composite profile
+    switchenv compose -c my_composite_profile_name -p my_snapshot_profile_name -p my_profile_name
 
     # Show all profile names
     switchenv list
@@ -247,6 +353,9 @@ def examples():
     # Drop into a subshell with a specific profile
     switchenv  # Will present you with a fuzzy searchable list of profiles
 
+    # Drop into a named profile (useful for invoking in scripts)
+    switchenv source -p profile_name
+
     # Delete profiles
     switchenv delete -p profile_name_1 [-p profile_name_2, ...]
 
@@ -255,12 +364,18 @@ def examples():
     print(text)
 
 
-@cli.command(help='List all profile names')
-def list():
+@cli.command(name='list', help='List all profile names')
+def list_profiles():
     swenv = SwitchEnv()
     ensure_profiles_exist(swenv)
-    for key in swenv.keys:
-        print(key)
+    for key, profile in swenv.items:
+        code_type = profile['code_type']
+        if code_type == 'raw':
+            print(key)
+        elif code_type == 'composed':
+            print(f'{key} -> {sorted(profile["code"])}')
+        else:
+            raise ValueError('unkown code_type')
 
 
 @cli.command(help='Show contents of a single profile')
@@ -272,6 +387,12 @@ def show(profiles):
         profiles = [swenv.get_key()]
     swenv = SwitchEnv()
     swenv.show(key_list=profiles)
+
+@cli.command(help='Drop into subshell with named profile (useful in scripts)')
+@click.option('-p', '--profile', required=True)
+def source(profile):
+    run_switch_env(profile)
+
 
 
 @cli.command(help='Delete a profile')
@@ -306,10 +427,19 @@ def add(profile_name, file_name):
     with open(file_name, 'r') as code_file:
         code = code_file.read()
 
-    blob = {profile_name: code}
+    swenv = SwitchEnv()
+    swenv.update_raw(profile_name, code)
+
+
+@cli.command(help='Compose a new profile from existing profiles')
+@click.option('-c', '--composed_profile_name', required=True, help='The name of the posed profile')
+@click.option('-p', '--profiles', multiple=True, help='The name of the source profile')
+def compose(composed_profile_name, profiles):
+    if not profiles:
+        print('You must supply at least one source profile')
 
     swenv = SwitchEnv()
-    swenv.update(blob)
+    swenv.update_composed(composed_profile_name, profiles)
 
 
 @cli.command(help='Snapshot current env into a profile')
@@ -322,7 +452,7 @@ def snapshot(profile_name):
         code_lines.append(f'export {key}="{val}"')
 
     code = '\n'.join(code_lines)
-    swenv.update({profile_name: code})
+    swenv.update_raw(profile_name, code)
 
 
 def main():

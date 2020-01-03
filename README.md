@@ -66,6 +66,7 @@ print_message () {
 ```
 
 # Setting up `switchenv`
+## Basic Setup
 Below is copy-paste from an interactive bash session showing how to set up the
 `switchenv` workflow.
 
@@ -111,14 +112,55 @@ home directory.
 This json file serves as the centralized data-store for all of my profile
 information.
 
+## Advanced Setup (Composed profiles)
+I can also create composed profiles.  These profiles will source other named
+profiles in the order they are specified.  Any changes I make to one of the
+sourced profiles will automatically carry over to the composite profile.
+Composed profiles can be nested.  So, a composed profile can have another composed
+profile as one of its sub-profiles.  Here is an example of setting up a composed profile
+```bash
+bash>
+bash> # Create a composed profile based on two other profiles
+bash> switchenv compose -c prod_with_func -p prod -p func
+bash>
+bash> # Show all profiles including new composite profile
+bash> switchenv list
+dev
+prod
+prod_with_func -> ['prod', 'func']
+func
+bash>
+```
+Now when you list profiles, you can easily identify composed profiles and see
+the order in which they will execute their sub-profiles.
+
 # Navigating Between Environments with `switchenv`
 Using `switchenv` involves interacting with a simple console-based UI, so it is
 best illustrated using a gif.  Shown here is my admittedly sub-par screen
 recording of how to use switchenv.
 
 For a more thorough description use
-```bash
+```
 switchenv --help
+```
+Or use the `switchenv` alias (because I hate typing) 
+```
+bash> sw --help
+
+Usage: sw [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  add       Create a profile from file
+  compose   Compose a new profile from existing profiles
+  delete    Delete a profile
+  examples  Show usage examples
+  list      List all profile names
+  show      Show contents of a single profile
+  snapshot  Snapshot current env into a profile
+  source    Drop into subshell with named profile (useful in scripts)
 ```
 
 Just for my future reference, I made this recording by using the native OSX
@@ -129,3 +171,15 @@ frames-per-sec to 6.  I let the software figure it out from there.
 
 
 ![Demo Gif](https://github.com/robdmc/switchenv/blob/master/images/switchenv_demo.gif)
+
+If you feel like digging around under the hood to see what `switchenv` actually sourced
+when activating your environment, you can look at
+```bash
+~/.switchenv/switchenvrc.sh
+```
+Your subshell was essentially invoked with the command
+```bash
+bash --init-file ~/.switchenv/switchenvrc.sh
+```
+You can manually execute this command in a new terminal window if you would like
+an exact clone of your environment in a new console.
