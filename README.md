@@ -113,9 +113,9 @@ This json file serves as the centralized data-store for all of my profile
 information.
 
 ## Advanced Setup (Composed profiles)
-You can create composed profiles.  These profiles will source other named
-profiles in the order they are specified.  Any changes you make to one of the
-sourced profiles will automatically carry over the the composite profile.
+I can also create composed profiles.  These profiles will source other named
+profiles in the order they are specified.  Any changes I make to one of the
+sourced profiles will automatically carry over to the composite profile.
 Composed profiles can be nested.  So, a composed profile can have another composed
 profile as one of its sub-profiles.  Here is an example of setting up a composed profile
 ```bash
