@@ -162,6 +162,7 @@ class SwitchEnv:
         return blob == saved_blob
 
     def get_code(self, profile_name):
+        self.ensure_profile_names_exist([profile_name])
         code_list = self._get_code_list(profile_name)
         return '\n'.join(code_list)
 
@@ -209,7 +210,16 @@ class SwitchEnv:
         else:
             warnings.warn('Warning.  File contents could not be verified.  Something went wrong with saving.')
 
+    def ensure_profile_names_exist(self, profile_names):
+        existing_profiles = set(self.blob['profiles'].keys())
+        profile_names = set(profile_names)
+        bad_profiles = profile_names - existing_profiles
+        if bad_profiles:
+            print(f'\n\nThe following profiles do not exist: {sorted(bad_profiles)}\n')
+            sys.exit(1)
+
     def update_composed(self, composed_profile_name, source_profile_names):
+        self.ensure_profile_names_exist(source_profile_names)
         blob = self.blob
         profiles = blob['profiles']
         entry = profiles.get(composed_profile_name, {'code_type': 'composed'})
@@ -262,6 +272,12 @@ class SwitchEnv:
         """
         Remove profiles from the blob
         """
+        self.ensure_profile_names_exist(keys)
+        confirm = input(f"\nDelete profile(s) {sorted(keys)}?\ny/n: ").lower()
+        if confirm[0] != 'y':
+            print('Nothing done')
+            return
+
         blob = self.blob
         for key in keys:
             blob['profiles'].pop(key, None)
@@ -274,6 +290,7 @@ class SwitchEnv:
         name using the 'key' variable.  Defaults to
         f'
         """
+        self.ensure_profile_names_exist(key_list)
         if not key_list:
             key = self.get_key()
             key_list = [key]
@@ -402,11 +419,6 @@ def delete(profiles):
     ensure_profiles_exist(swenv)
     if not profiles:
         profiles = [swenv.get_key()]
-
-    confirm = input(f"\nDelete {profiles}\ny/n: ").lower()
-    if confirm[0] != 'y':
-        print('Nothing done')
-        return
 
     initial_keys = set(swenv.keys)
     swenv.delete(keys=profiles)
