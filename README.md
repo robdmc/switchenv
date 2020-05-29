@@ -134,6 +134,22 @@ bash>
 Now when you list profiles, you can easily identify composed profiles and see
 the order in which they will execute their sub-profiles.
 
+## Customizing `switchenv`
+The default location for switchenv config files is `~/.switchenv`.  Occasionally, you may
+want to have those files located in a different directory.  This can be accomplished with
+the `switchenv config` command.
+
+## Exporting / Importing `switchenv` configuration
+You can export the internal state of your `switchenv` installation by running
+```bash
+switchenv export-config > my_export.json
+```
+This will save all of your profiles into a json blob.  To reload this state into `switchenv`
+(perhaps on a different computer) you can simply run
+```bash
+switchenv import-config -f my_export.json
+```
+
 # Navigating Between Environments with `switchenv`
 Using `switchenv` involves interacting with a simple console-based UI, so it is
 best illustrated using a gif.  Shown here is my admittedly sub-par screen
@@ -184,6 +200,14 @@ bash --init-file ~/.switchenv/switchenvrc.sh
 You can manually execute this command in a new terminal window if you would like
 an exact clone of your environment in a new console.
 
+# Executing a single command in a `switchenv` environment
+Switchenv comes with the ability of executing single commands inside the specified environment.
+The command **MUST** be contained in quotes. Within those quotes, you may use all bash features such
+as pipes, redirects, etc.  So for example, this should just work
+
+```bash
+sw exec -p my_profile  'printenv | grep PG >/tmp/my_file.txt'
+```
 ___
 Projects by [robdmc](https://www.linkedin.com/in/robdecarvalho).
 * [Pandashells](https://github.com/robdmc/pandashells) Pandas at the bash command line
