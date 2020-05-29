@@ -169,14 +169,18 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  add       Create a profile from file
-  compose   Compose a new profile from existing profiles
-  delete    Delete a profile
-  examples  Show usage examples
-  list      List all profile names
-  show      Show contents of a single profile
-  snapshot  Snapshot current env into a profile
-  source    Drop into subshell with named profile (useful in scripts)
+  add            Create a profile from file
+  compose        Compose a new profile from existing profiles
+  config         View or set where the config directory lives
+  delete         Delete a profile
+  examples       Show usage examples
+  exec           Execute a QUOTED command in the specified env
+  export-config  Export config to stdout (see also import-config)
+  import-config  Import config from file (see also export-config)
+  list           List all profile names
+  show           Show contents of a single profile
+  snapshot       Snapshot current env into a profile
+  source         Drop into subshell with named profile (useful in scripts)
 ```
 
 Just for my future reference, I made this recording by using the native OSX
