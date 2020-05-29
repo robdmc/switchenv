@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
-
+import contextlib
 import os
+import subprocess
 import sys
 import json
 import click
@@ -572,6 +573,51 @@ def import_config(file_name):
         json.dump(blob, buff, indent=2)
 
     print('\n\n Success!\n')
+
+@cli.command(help='Execute a QUOTED command in the specified env')
+@click.argument('command', nargs=1)
+@click.option('-p', '--profile')
+def exec(command, profile):
+    # Make the temp rc file based on the specifed profile
+    swenv = SwitchEnv()
+    ensure_profiles_exist(swenv)
+    if profile is None:
+        profile = swenv.get_key()
+    code = swenv.get_code(profile)
+    swenv.make_temp_rc_file(profile, code)
+
+    # You want to the executed command to replace the running temp script process
+    command = f'exec {command}'
+
+    # Prepend sourcing the appropriate rc file to the begnning of the script
+    commands = [f'source {swenv.TEMP_RC_FILE}', command]
+
+    # Replace this python process with a modified bash shell running the temp script
+    with temp_script(commands) as script_file:
+        os.execvpe('bash', ['bash', script_file], swenv.env)
+
+
+@contextlib.contextmanager
+def temp_script(commands):
+    """
+    Run commands in a temporary, self-deleting bash script.
+    Each element in the commands list is treated as a different line in a bash script
+    """
+    # The file name of the tmp script
+    file_name = os.path.join('/tmp/', f'__working_script_util_file__.sh')
+
+    # The first command will delete the bash script, but the rest will still run
+    commands = [f'rm {file_name}'] + commands
+
+    # Write commands to the temp bash script
+    with open(file_name, 'w') as buff:
+        buff.write('\n'.join(commands) + '\n')
+
+    # Yield file_name back to calling code for it to run whatever it wants
+    yield file_name
+
+
+
 
 def main():
     if len(sys.argv) > 1:
