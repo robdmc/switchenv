@@ -550,10 +550,28 @@ def config(set_location, reset_default_location):
         handler.change_blob_location(full_location)
 
 
+@cli.command(help='Export config to stdout (see also import-config)')
+def export_config():
+    swenv = SwitchEnv()
+    print(json.dumps(swenv.blob, indent=2))
 
 
+@cli.command(help='Import config from file (see also export-config)')
+@click.option('-f', '--file-name', required=True, help='The name of the config file to import')
+def import_config(file_name):
+    file_name = os.path.realpath(os.path.expanduser(file_name))
+    if not os.path.isfile(file_name):
+        print(f'Config file does not exist: {file_name}', file=sys.stderr)
+        exit(1)
 
+    with open(file_name) as buff:
+        blob = json.load(buff)
 
+    swenv = SwitchEnv()
+    with open(swenv.BLOB_FILE, 'w') as buff:
+        json.dump(blob, buff, indent=2)
+
+    print('\n\n Success!\n')
 
 def main():
     if len(sys.argv) > 1:
