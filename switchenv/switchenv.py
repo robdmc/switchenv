@@ -27,17 +27,57 @@ class cached_property(object):
         return res
 
 
-class SwitchEnv:
-    # Define the file locations for persisting environments
-    BLOB_DIR = os.path.realpath(os.path.expanduser('~/.switchenv'))
-    BLOB_FILE = os.path.join(BLOB_DIR, 'profiles.json')
-    TEMP_FILE = os.path.join(BLOB_DIR, '__temp_profiles__.json')
-    BASH_RC_FILE = os.path.realpath(os.path.expanduser('~/.bashrc'))
-    TEMP_RC_FILE = os.path.join(BLOB_DIR, 'switchenvrc.sh')
-
-    BLOB_VERSION = '1.0'
+class BlobDirHandler:
+    FILE_DIR = os.path.dirname(os.path.realpath(__file__))
+    LOCATION_FILE = os.path.join(FILE_DIR, 'blob_location.json')
+    DEFAULT_BLOB_DIR = os.path.realpath(os.path.expanduser('~/.switchenv'))
 
     def __init__(self):
+        self.location_file = os.path.join(self.FILE_DIR, 'blob_location.json')
+
+    def change_blob_location(self, location):
+        location_blob = self.location_blob
+        location_blob.update(location=location)
+
+        with open(self.location_file, 'w') as buff:
+            json.dump(location_blob, buff)
+        print(f'\nConfig directory is now: {location}\n')
+
+    @property
+    def location_blob(self):
+        try:
+            if not os.path.isfile(self.location_file):
+                location_blob = {'location': self.DEFAULT_BLOB_DIR}
+                with open(self.location_file, 'w') as buff:
+                    json.dump(location_blob, buff)
+
+            with open(self.location_file) as buff:
+                location_blob = json.load(buff)
+        except:  # noqa
+            if os.path.isfile(self.location_file):
+                os.unlink(self.location_file)
+                location_blob = self.location_blob
+            else:
+                location_blob = {'location': self.DEFAULT_BLOB_DIR}
+        return location_blob.copy()
+
+    def __get__(self, instance, type=None):
+        return self.location_blob['location']
+
+
+class SwitchEnv:
+    # Define the file locations for persisting environments
+    BLOB_DIR = BlobDirHandler()
+
+    # BLOB_DIR = os.path.realpath(os.path.expanduser('~/.switchenv'))
+    def __init__(self):
+        self.BLOB_FILE = os.path.join(self.BLOB_DIR, 'profiles.json')
+        self.TEMP_FILE = os.path.join(self.BLOB_DIR, '__temp_profiles__.json')
+        self.BASH_RC_FILE = os.path.realpath(os.path.expanduser('~/.bashrc'))
+        self.TEMP_RC_FILE = os.path.join(self.BLOB_DIR, 'switchenvrc.sh')
+
+        self.BLOB_VERSION = '1.0'
+
         # Ensure directory structure every time class is instantiate4d
         os.makedirs(self.BLOB_DIR, exist_ok=True)
 
@@ -465,6 +505,54 @@ def snapshot(profile_name):
 
     code = '\n'.join(code_lines)
     swenv.update_raw(profile_name, code)
+
+
+@cli.command(help='View or set where the config directory lives')
+@click.option('-s', '--set-location', help='Set the location to the specified directory')
+@click.option('-r', '--reset-default-location', is_flag=True, help='Set config directory to default location')
+def config(set_location, reset_default_location):
+    # Instantiate the class that knows how to handle config blob
+    handler = BlobDirHandler()
+
+    # If requested, change to the default location and quit
+    if reset_default_location:
+        handler.change_blob_location(handler.DEFAULT_BLOB_DIR)
+        exit(0)
+
+
+    # If no options supplied, just print the current location of the config dir
+    config_dir = handler.location_blob['location']
+    if set_location is None:
+        msg = (
+            f'\n\nCurrent config directory:\n{config_dir}\n\n'
+            'Run with the -s or -r options to change it.\n\n'
+        )
+        print(msg)
+        exit(0)
+    # Otherwise set the location
+    else:
+        # Get the full absolute path
+        full_location = os.path.realpath(os.path.expanduser(set_location))
+
+        # Prompt to create non-existing directory
+        if not os.path.isdir(full_location):
+            msg = (
+                f'\n\nDirectory does not exist: {set_location}\n\n'
+                'Create it?  y/n:  '
+            )
+            answer = input(msg)
+            if answer and answer.lower()[0] == 'y':
+                os.makedirs(full_location)
+            else:
+                print('\n\nNothing done.')
+                exit(0)
+
+        handler.change_blob_location(full_location)
+
+
+
+
+
 
 
 def main():
