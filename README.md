@@ -219,3 +219,4 @@ Projects by [robdmc](https://www.linkedin.com/in/robdecarvalho).
 * [Behold](https://github.com/robdmc/behold) Helping debug large Python projects
 * [Crontabs](https://github.com/robdmc/crontabs) Simple scheduling library for Python scripts
 * [Switchenv](https://github.com/robdmc/switchenv) Manager for bash environments
+* [Gistfinder](https://github.com/robdmc/gistfinder) Fuzzy-search your gists
