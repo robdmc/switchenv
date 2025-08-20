@@ -431,7 +431,7 @@ def list_profiles():
         if code_type == 'raw':
             print(key)
         elif code_type == 'composed':
-            print(f'{key} -> {sorted(profile["code"])}')
+            print(f'{key} -> {profile["code"]}')
         else:
             raise ValueError('unkown code_type')
 
