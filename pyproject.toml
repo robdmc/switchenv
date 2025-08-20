@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "switchenv"
+dynamic = ["version"]
+description = "Manager for bash environments"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+    {name = "Rob deCarvalho", email = "unlisted@unlisted.net"},
+]
+keywords = []
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "click",
+    "fuzzypicker",
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage",
+    "flake8",
+    "mock",
+    "nose",
+    "wheel",
+    "twine",
+    "Sphinx",
+    "sphinx_rtd_theme",
+]
+
+[project.scripts]
+switchenv = "switchenv.switchenv:main"
+sw = "switchenv.switchenv:main"
+
+[project.urls]
+Homepage = "https://github.com/robdmc/switchenv"
+Repository = "https://github.com/robdmc/switchenv"
+
+[tool.hatch.version]
+path = "switchenv/version.py"
+
+[tool.coverage.run]
+omit = [
+    "switchenv/version.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
+
+[tool.flake8]
+max-line-length = 120
+exclude = ["docs", "env", "*.egg"]
+max-complexity = 10
+ignore = ["E402"]
+
+[tool.nose]
+with-coverage = true
+cover-branches = true
+cover-min-percentage = 100
+cover-package = "switchenv"

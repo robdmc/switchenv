@@ -37,6 +37,18 @@ clean:  ## Remove build artifacts, caches, and coverage results
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 	find . -type d -name '.pytest_cache' -exec rm -rf {} +
 
+.PHONY: uv_build
+uv_build: ## Build the package using UV
+	uv build
+
+.PHONY: uv_publish
+uv_publish: uv_build ## Publish the package to PyPI using twine
+	uv run twine upload dist/*
+
+.PHONY: uv_publish_test
+uv_publish_test: uv_build ## Publish the package to TestPyPI using twine
+	uv run twine upload --repository testpypi dist/*
+
 .PHONY: tag_show
 tag_show:  ## Show all git tags
 	git tag | cat -
